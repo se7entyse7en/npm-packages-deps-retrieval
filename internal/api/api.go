@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	fmt "fmt"
+	"sync"
 
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/store"
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/worker"
@@ -38,21 +39,40 @@ func (s *ApiServer) buildDependenciesTree(ctx context.Context, packageName, pack
 		return nil, err
 	}
 
-	var depsTree []*Dependency
+	var wg sync.WaitGroup
+	index := 0
+	depsTree := make([]*Dependency, len(deps))
+	errCh := make(chan error)
 	for name, version := range deps {
-		depsSubTree, err := s.buildDependenciesTree(ctx, name, version)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
 
-		depsTree = append(depsTree, depsSubTree)
+		go func(i int, name, version string) {
+			defer wg.Done()
+
+			depsSubTree, err := s.buildDependenciesTree(ctx, name, version)
+			if err != nil {
+				errCh <- err
+				return
+			}
+
+			depsTree[i] = depsSubTree
+		}(index, name, version)
+
+		index++
 	}
 
-	return &Dependency{
-		Name:         packageName,
-		Version:      packageVersion,
-		Dependencies: depsTree,
-	}, nil
+	wg.Wait()
+
+	select {
+	case err := <-errCh:
+		return nil, err
+	default:
+		return &Dependency{
+			Name:         packageName,
+			Version:      packageVersion,
+			Dependencies: depsTree,
+		}, nil
+	}
 }
 
 func (s *ApiServer) getDependencies(ctx context.Context, packageName, packageVersion string) (map[string]string, error) {
