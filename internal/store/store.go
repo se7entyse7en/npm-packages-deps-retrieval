@@ -13,6 +13,9 @@ type Store interface {
 	Save(context.Context, *Record) error
 	Get(context.Context, string) (*Record, error)
 	All(context.Context) (map[string]*Record, error)
+
+	Open(context.Context) error
+	Close(context.Context) error
 }
 
 type MemoryStore struct {
@@ -34,4 +37,12 @@ func (ms *MemoryStore) Get(ctx context.Context, id string) (*Record, error) {
 
 func (ms *MemoryStore) All(ctx context.Context) (map[string]*Record, error) {
 	return ms.memory, nil
+}
+
+func (ms *MemoryStore) Open(context.Context) error {
+	return nil
+}
+
+func (ms *MemoryStore) Close(context.Context) error {
+	return nil
 }
