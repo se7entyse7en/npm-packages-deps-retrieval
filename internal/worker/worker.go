@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/queue"
@@ -16,12 +17,26 @@ type dependencies struct {
 }
 
 func (d *dependencies) normalize() {
-	for k, v := range d.Dependencies {
-		if strings.HasPrefix(v, "~") || strings.HasPrefix(v, "^") {
-			v = v[1:]
+	for name, version := range d.Dependencies {
+		if strings.HasPrefix(version, "~") || strings.HasPrefix(version, "^") {
+			version = version[1:]
 		}
 
-		d.Dependencies[k] = v
+		matched, err := regexp.MatchString(`^\d`, version)
+		if err != nil {
+			panic(err)
+		}
+
+		if !matched {
+			fmt.Printf("warning, skipping package `%s` with version `%s`",
+				name, version)
+			delete(d.Dependencies, name)
+			continue
+		}
+
+		d.Dependencies[name] = version
+	}
+}
 
 type DependenciesFetcher struct {
 	s store.Store
