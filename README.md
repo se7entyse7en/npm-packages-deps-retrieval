@@ -1,1 +1,1 @@
-# npm-packages-deps-fetcher
+# npm-packages-deps-retrieval
