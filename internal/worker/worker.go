@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,9 +34,9 @@ func (d *dependencies) normalize() {
 	}
 }
 
-func (w *Worker) Start() error {
+func (w *Worker) Start(ctx context.Context) error {
 	for {
-		len, err := w.q.Len()
+		len, err := w.q.Len(ctx)
 		if err != nil {
 			return nil
 		}
@@ -45,7 +46,7 @@ func (w *Worker) Start() error {
 		}
 
 		fmt.Printf("queue length: %d\n", len)
-		id, err := w.q.Remove()
+		id, err := w.q.Remove(ctx)
 		if err != nil {
 			return err
 		}
@@ -57,16 +58,16 @@ func (w *Worker) Start() error {
 			return err
 		}
 
-		if err := w.storeDependencies(id, packageName, packageVersion, deps); err != nil {
+		if err := w.storeDependencies(ctx, id, packageName, packageVersion, deps); err != nil {
 			return err
 		}
 
-		if err := w.enqueueDependencies(deps); err != nil {
+		if err := w.enqueueDependencies(ctx, deps); err != nil {
 			return err
 		}
 	}
 
-	dbContent, err := w.s.All()
+	dbContent, err := w.s.All(ctx)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func (w *Worker) getDependencies(packageName, packageVersion string) (*dependenc
 	return deps, nil
 }
 
-func (w *Worker) storeDependencies(id, packageName, packageVersion string, deps *dependencies) error {
+func (w *Worker) storeDependencies(ctx context.Context, id, packageName, packageVersion string, deps *dependencies) error {
 	record := &store.Record{
 		ID:           id,
 		Name:         packageName,
@@ -104,14 +105,14 @@ func (w *Worker) storeDependencies(id, packageName, packageVersion string, deps 
 		Dependencies: deps.Dependencies,
 	}
 	fmt.Printf("storing record: %v\n", record)
-	return w.s.Save(record)
+	return w.s.Save(ctx, record)
 }
 
-func (w *Worker) enqueueDependencies(deps *dependencies) error {
+func (w *Worker) enqueueDependencies(ctx context.Context, deps *dependencies) error {
 	for name, version := range deps.Dependencies {
 		id := fmt.Sprintf("%s@%s", name, version)
 		fmt.Printf("enqueuing package: %s\n", id)
-		if err := w.q.Add(id); err != nil {
+		if err := w.q.Add(ctx, id); err != nil {
 			return err
 		}
 	}

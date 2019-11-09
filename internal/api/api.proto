@@ -1,0 +1,21 @@
+syntax = "proto3";
+package api;
+
+service DependenciesService {
+    rpc GetDependencies (DependenciesRequest) returns (DependenciesResponse) {}
+}
+
+message DependenciesRequest {
+    string name = 1;
+    string version = 2;
+}
+
+message Dependency {
+    string name = 1;
+    string version = 2;
+    repeated Dependency dependencies = 3;
+}
+
+message DependenciesResponse {
+    Dependency dependencies = 1;
+}

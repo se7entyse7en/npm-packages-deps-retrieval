@@ -2,31 +2,32 @@ package queue
 
 import (
 	"bufio"
+	"context"
 	"os"
 )
 
 type Queue interface {
-	Add(string) error
-	Remove() (string, error)
-	Len() (int, error)
+	Add(context.Context, string) error
+	Remove(context.Context) (string, error)
+	Len(context.Context) (int, error)
 }
 
 type MemoryQueue struct {
 	q []string
 }
 
-func (sq *MemoryQueue) Add(element string) error {
+func (sq *MemoryQueue) Add(ctx context.Context, element string) error {
 	sq.q = append(sq.q, element)
 	return nil
 }
 
-func (sq *MemoryQueue) Remove() (string, error) {
+func (sq *MemoryQueue) Remove(ctx context.Context) (string, error) {
 	el := sq.q[0]
 	sq.q = sq.q[1:]
 	return el, nil
 }
 
-func (sq *MemoryQueue) Len() (int, error) {
+func (sq *MemoryQueue) Len(ctx context.Context) (int, error) {
 	return len(sq.q), nil
 }
 
