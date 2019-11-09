@@ -11,15 +11,6 @@ import (
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/store"
 )
 
-type Worker struct {
-	q queue.Queue
-	s store.Store
-}
-
-func NewWorker(q queue.Queue, s store.Store) *Worker {
-	return &Worker{q: q, s: s}
-}
-
 type dependencies struct {
 	Dependencies map[string]string `json:"dependencies,omitempty"`
 }
@@ -31,7 +22,62 @@ func (d *dependencies) normalize() {
 		}
 
 		d.Dependencies[k] = v
+
+type DependenciesFetcher struct {
+	s store.Store
+}
+
+func NewDependenciesFetcher(s store.Store) *DependenciesFetcher {
+	return &DependenciesFetcher{s: s}
+}
+
+func (f *DependenciesFetcher) Fetch(packageName, packageVersion string) (map[string]string, error) {
+	fmt.Printf("getting dependencies for package `%s`, version `%s`\n", packageName, packageVersion)
+	endpoint := fmt.Sprintf("https://registry.npmjs.org/%s/%s",
+		packageName, packageVersion)
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return nil, err
 	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("not found")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non-200 status code")
+	}
+
+	deps := &dependencies{}
+	if err := json.NewDecoder(resp.Body).Decode(deps); err != nil {
+		return nil, err
+	}
+
+	deps.normalize()
+	return deps.Dependencies, nil
+}
+
+func (f *DependenciesFetcher) Store(ctx context.Context, id, packageName, packageVersion string, deps map[string]string) error {
+	record := &store.Record{
+		ID:           id,
+		Name:         packageName,
+		Version:      packageVersion,
+		Dependencies: deps,
+	}
+
+	fmt.Printf("storing record: %v\n", record)
+	return f.s.Save(ctx, record)
+}
+
+type Worker struct {
+	q queue.Queue
+	f *DependenciesFetcher
+}
+
+func NewWorker(q queue.Queue, s store.Store) *Worker {
+	return &Worker{q: q, f: NewDependenciesFetcher(s)}
 }
 
 func (w *Worker) Start(ctx context.Context) error {
@@ -53,12 +99,12 @@ func (w *Worker) Start(ctx context.Context) error {
 
 		splitted := strings.Split(id, "@")
 		packageName, packageVersion := splitted[0], splitted[1]
-		deps, err := w.getDependencies(packageName, packageVersion)
+		deps, err := w.f.Fetch(packageName, packageVersion)
 		if err != nil {
 			return err
 		}
 
-		if err := w.storeDependencies(ctx, id, packageName, packageVersion, deps); err != nil {
+		if err := w.f.Store(ctx, id, packageName, packageVersion, deps); err != nil {
 			return err
 		}
 
@@ -67,7 +113,7 @@ func (w *Worker) Start(ctx context.Context) error {
 		}
 	}
 
-	dbContent, err := w.s.All(ctx)
+	dbContent, err := w.f.s.All(ctx)
 	if err != nil {
 		return err
 	}
@@ -77,39 +123,8 @@ func (w *Worker) Start(ctx context.Context) error {
 	return nil
 }
 
-func (w *Worker) getDependencies(packageName, packageVersion string) (*dependencies, error) {
-	fmt.Printf("getting dependencies for package `%s`, version `%s`\n", packageName, packageVersion)
-	endpoint := fmt.Sprintf("https://registry.npmjs.org/%s/%s",
-		packageName, packageVersion)
-	resp, err := http.Get(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	deps := &dependencies{}
-	if err := json.NewDecoder(resp.Body).Decode(deps); err != nil {
-		return nil, err
-	}
-
-	deps.normalize()
-	return deps, nil
-}
-
-func (w *Worker) storeDependencies(ctx context.Context, id, packageName, packageVersion string, deps *dependencies) error {
-	record := &store.Record{
-		ID:           id,
-		Name:         packageName,
-		Version:      packageVersion,
-		Dependencies: deps.Dependencies,
-	}
-	fmt.Printf("storing record: %v\n", record)
-	return w.s.Save(ctx, record)
-}
-
-func (w *Worker) enqueueDependencies(ctx context.Context, deps *dependencies) error {
-	for name, version := range deps.Dependencies {
+func (w *Worker) enqueueDependencies(ctx context.Context, deps map[string]string) error {
+	for name, version := range deps {
 		id := fmt.Sprintf("%s@%s", name, version)
 		fmt.Printf("enqueuing package: %s\n", id)
 		if err := w.q.Add(ctx, id); err != nil {
