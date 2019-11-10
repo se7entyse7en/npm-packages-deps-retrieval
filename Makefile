@@ -5,3 +5,6 @@ proto-gen:
 /* eslint-disable */' app/src/api_grpc_web_pb.js
 	sed -i '' '/GENERATED CODE -- DO NOT EDIT!/a\
 /* eslint-disable */' app/src/api_pb.js
+
+docker-build-envoy:
+	docker build -t grpcweb/envoy -f docker/envoy/Dockerfile .
