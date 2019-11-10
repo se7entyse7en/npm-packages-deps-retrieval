@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/queue"
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/store"
 	"github.com/spf13/cobra"
 )
@@ -43,13 +44,50 @@ func buildStore(cmd *cobra.Command, fileParamName string) (store.Store, error) {
 			return nil, err
 		}
 	} else {
-		outFile, err := cmd.Flags().GetString(fileParamName)
+		file, err := cmd.Flags().GetString(fileParamName)
 		if err != nil {
 			return nil, err
 		}
 
-		s = store.NewFileStore(outFile, true)
+		if file == "" {
+			return nil, fmt.Errorf("empty file name")
+		}
+
+		s = store.NewFileStore(file, true)
 	}
 
 	return s, nil
+}
+
+func buildQueue(cmd *cobra.Command, fileParamName string) (queue.Queue, error) {
+	brokerURI, err := cmd.Flags().GetString("broker-uri")
+	if err != nil {
+		return nil, err
+	}
+
+	var q queue.Queue
+	if brokerURI != "" {
+		qName, err := cmd.Flags().GetString("queue")
+		if err != nil {
+			return nil, err
+		}
+
+		q, err = queue.NewRabbitMQQueue(brokerURI, qName)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		file, err := cmd.Flags().GetString(fileParamName)
+		if err != nil {
+			return nil, err
+		}
+
+		if file == "" {
+			return nil, fmt.Errorf("empty file name")
+		}
+
+		q = queue.NewFileQueue(file, true)
+	}
+
+	return q, nil
 }
