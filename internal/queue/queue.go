@@ -10,6 +10,9 @@ type Queue interface {
 	Add(context.Context, string) error
 	Remove(context.Context) (string, error)
 	Len(context.Context) (int, error)
+
+	Open(context.Context) error
+	Close(context.Context) error
 }
 
 type MemoryQueue struct {
@@ -29,6 +32,14 @@ func (sq *MemoryQueue) Remove(ctx context.Context) (string, error) {
 
 func (sq *MemoryQueue) Len(ctx context.Context) (int, error) {
 	return len(sq.q), nil
+}
+
+func (sq *MemoryQueue) Open(ctx context.Context) error {
+	return nil
+}
+
+func (sq *MemoryQueue) Close(ctx context.Context) error {
+	return nil
 }
 
 func NewMemoryQueueFromFile(fileName string) (*MemoryQueue, error) {
