@@ -97,17 +97,8 @@ func NewWorker(q queue.Queue, s store.Store) *Worker {
 
 func (w *Worker) Start(ctx context.Context) error {
 	for {
-		len, err := w.q.Len(ctx)
-		if err != nil {
-			return nil
-		}
-
-		if len <= 0 {
-			break
-		}
-
-		fmt.Printf("queue length: %d\n", len)
 		id, err := w.q.Remove(ctx)
+		fmt.Printf("dequeued item `%s`\n", id)
 		if err != nil {
 			return err
 		}
