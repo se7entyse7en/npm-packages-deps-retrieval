@@ -6,19 +6,20 @@ import (
 	"os"
 
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/queue"
-	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/store"
 	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/worker"
 	"github.com/spf13/cobra"
 )
-
-var inFile string
-var outFile string
 
 var workerCmd = &cobra.Command{
 	Use:   "worker",
 	Short: "Runs the worker that retrieves dependency for a given package",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("worker called")
+		inFile, err := cmd.Flags().GetString("in-file")
+		if err != nil {
+			panic(err)
+		}
+
 		if inFile == "" {
 			os.Exit(1)
 		}
@@ -28,7 +29,11 @@ var workerCmd = &cobra.Command{
 			panic(err)
 		}
 
-		s := store.NewFileStore(outFile, true)
+		s, err := buildStore(cmd, "out-file")
+		if err != nil {
+			panic(err)
+		}
+
 		ctx := context.Background()
 		if err := s.Open(ctx); err != nil {
 			panic(err)
@@ -46,6 +51,9 @@ var workerCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(workerCmd)
 
-	workerCmd.Flags().StringVarP(&inFile, "in-file", "i", "", "File to read input from")
-	workerCmd.Flags().StringVarP(&outFile, "out-file", "o", "", "File to write output t")
+	workerCmd.Flags().StringP("in-file", "i", "", "File to read input from")
+	workerCmd.Flags().StringP("out-file", "o", "", "File to write output to")
+	workerCmd.Flags().StringP("db-uri", "u", "", "DB uri of the MongoDB instance to write output to")
+	workerCmd.Flags().StringP("db", "d", "", "Database name to write output to")
+	workerCmd.Flags().StringP("coll", "c", "", "Collection name to write output to")
 }
