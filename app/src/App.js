@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 import Form from './form.js';
+import GraphViz from './graph.js';
 
 class App extends React.Component {
 
@@ -15,9 +16,15 @@ class App extends React.Component {
   }
 
   render = () => {
+    let graph = null;
+    if (this.state.response.err === null && this.state.response.dependencies !== null) {
+      graph = <GraphViz dependencies={this.state.response.dependencies}></GraphViz>;
+    }
+
     return (
       <div className="App container">
         <Form onResponseHandler={this.onResponseHandler}></Form>
+        {graph}
       </div>
     );
   };
