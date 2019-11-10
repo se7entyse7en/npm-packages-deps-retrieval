@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/se7entyse7en/npm-packages-deps-retrieval/internal/store"
 	"github.com/spf13/cobra"
 )
 
@@ -17,4 +18,38 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func buildStore(cmd *cobra.Command, fileParamName string) (store.Store, error) {
+	dbURI, err := cmd.Flags().GetString("db-uri")
+	if err != nil {
+		return nil, err
+	}
+
+	var s store.Store
+	if dbURI != "" {
+		db, err := cmd.Flags().GetString("db")
+		if err != nil {
+			return nil, err
+		}
+
+		coll, err := cmd.Flags().GetString("coll")
+		if err != nil {
+			return nil, err
+		}
+
+		s, err = store.NewMongoStore(dbURI, db, coll)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		outFile, err := cmd.Flags().GetString(fileParamName)
+		if err != nil {
+			return nil, err
+		}
+
+		s = store.NewFileStore(outFile, true)
+	}
+
+	return s, nil
 }
