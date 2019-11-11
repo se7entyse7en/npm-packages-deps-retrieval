@@ -1,0 +1,45 @@
+version: '3.4'
+
+services:
+
+  dispatcher:
+    image: se7entyse7en/npm-pdr
+    depends_on:
+      - worker
+    command: ['dispatcher', '-b', 'amqp://rabbitmq:5672', '-q', 'events', '-t', '100']
+
+  worker:
+    image: se7entyse7en/npm-pdr
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+      - mongodb
+    command: ['worker', '-b', 'amqp://rabbitmq:5672', '-q', 'events', '-u', 'mongodb://mongodb:27017', '-d', 'packages', '-c', 'dependencies']
+
+  api:
+    image: se7entyse7en/npm-pdr
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    depends_on:
+      - mongodb
+    command: ['api', '-p', '8080', '-u', 'mongodb://mongodb:27017', '-d', 'packages', '-c', 'dependencies']
+
+  envoy:
+    image: grpcweb/envoy
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+
+  mongodb:
+    image: mongo:3.4
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - 15672:15672
+      - 5672:5672

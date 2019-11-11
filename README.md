@@ -1,12 +1,21 @@
 # npm-packages-deps-retrieval
 
+## Running
+
+The requirements are: `docker`, `docker-compose`, `npm`, `make`.
+To run the application, you need to clone the repository and run the following commands:
+```
+$ make prepare
+$ make start
+```
+
 ## TODOs
 
-- [ ] Add a decent api
+- [ ] Add diagram of the architecture
 - [ ] Add a way to observe components stats
 - [ ] Add tests
-- [ ] Use a real queue (kafka would make it scale well: a topic with a number of partitions >= # workers)
-- [ ] Use a real database (for easier distribution a NoSQL one would fit)
+- [ ] Add error message in web page
+- [ ] Dockerize application
 
 ## Ideas
 
