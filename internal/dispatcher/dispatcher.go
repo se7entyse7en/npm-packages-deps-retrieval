@@ -44,7 +44,7 @@ func (d *Dispatcher) Start(ctx context.Context) error {
 	for counter < d.topN {
 		pageSize := d.calcPageSize(counter, defaultSize, d.topN)
 		endpoint := fmt.Sprintf(searchURL, pageSize, counter)
-		fmt.Printf("calling endpoint %s", endpoint)
+		fmt.Printf("calling endpoint %s\n", endpoint)
 		resp, err := http.Get(endpoint)
 		if err != nil {
 			return err
@@ -66,7 +66,11 @@ func (d *Dispatcher) Start(ctx context.Context) error {
 		}
 
 		for _, p := range objs.Objects {
-			d.q.Add(ctx, fmt.Sprintf("%s@%s", p.Package.Name, p.Package.Version))
+			item := fmt.Sprintf("%s@%s", p.Package.Name, p.Package.Version)
+			fmt.Printf("enqueueing item `%s`\n", item)
+			if err := d.q.Add(ctx, item); err != nil {
+				return err
+			}
 		}
 
 		counter += pageSize

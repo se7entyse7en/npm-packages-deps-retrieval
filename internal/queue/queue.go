@@ -3,8 +3,11 @@ package queue
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"os"
+
+	"github.com/streadway/amqp"
 )
 
 type Queue interface {
@@ -121,4 +124,77 @@ func (fq *FileQueue) Close(context.Context) error {
 	}
 
 	return writer.Flush()
+}
+
+type RabbitMQQueue struct {
+	uri       string
+	ch        *amqp.Channel
+	queueName string
+	msgs      *<-chan amqp.Delivery
+}
+
+func NewRabbitMQQueue(uri, queue string) (*RabbitMQQueue, error) {
+	conn, err := amqp.Dial(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+
+	q, err := ch.QueueDeclare(queue, true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RabbitMQQueue{uri: uri, ch: ch, queueName: q.Name}, nil
+}
+
+func (sq *RabbitMQQueue) Add(ctx context.Context, element string) error {
+	return sq.ch.Publish(
+		"",
+		sq.queueName,
+		true,
+		false,
+		amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "text/plain",
+			Body:         []byte(element),
+		})
+}
+
+func (sq *RabbitMQQueue) Remove(ctx context.Context) (string, error) {
+	if sq.msgs == nil {
+		msgs, err := sq.ch.Consume(
+			sq.queueName,
+			"",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+
+		if err != nil {
+			return "", err
+		}
+
+		sq.msgs = &msgs
+	}
+
+	return string((<-*sq.msgs).Body), nil
+}
+
+func (sq *RabbitMQQueue) Len(ctx context.Context) (int, error) {
+	return 0, fmt.Errorf("not supported")
+}
+
+func (sq *RabbitMQQueue) Open(ctx context.Context) error {
+	return nil
+}
+
+func (sq *RabbitMQQueue) Close(ctx context.Context) error {
+	return nil
 }
