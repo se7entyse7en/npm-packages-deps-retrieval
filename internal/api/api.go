@@ -16,6 +16,7 @@ type ApiServer struct {
 
 func (s *ApiServer) GetDependencies(ctx context.Context, r *DependenciesRequest) (*DependenciesResponse, error) {
 	name, version := s.parsePackage(r)
+	fmt.Printf("received request for `%s@%s`\n", name, version)
 	depsTree, err := s.buildDependenciesTree(ctx, name, version)
 	if err != nil {
 		return nil, err
@@ -77,8 +78,9 @@ func (s *ApiServer) buildDependenciesTree(ctx context.Context, packageName, pack
 
 func (s *ApiServer) getDependencies(ctx context.Context, packageName, packageVersion string) (map[string]string, error) {
 	packageID := fmt.Sprintf("%s@%s", packageName, packageVersion)
+	fmt.Printf("looking for dependencies for `%s` in database\n", packageID)
 	record, err := s.s.Get(ctx, packageID)
-	if err != nil {
+	if err != nil && err.Error() != "mongo: no documents in result" {
 		return nil, err
 	}
 
