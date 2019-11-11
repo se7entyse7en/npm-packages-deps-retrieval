@@ -25,6 +25,15 @@ services:
       - mongodb
     command: ['api', '-p', '8080', '-u', 'mongodb://mongodb:27017', '-d', 'packages', '-c', 'dependencies']
 
+  app:
+    image: se7entyse7en/npm-pdr-app
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    depends_on:
+      - envoy
+      - api
+
   envoy:
     image: grpcweb/envoy
     restart: unless-stopped

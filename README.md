@@ -2,12 +2,14 @@
 
 ## Running
 
-The requirements are: `docker`, `docker-compose`, `npm`, `make`.
+The requirements are: `docker`, `docker-compose`, `make`.
 To run the application, you need to clone the repository and run the following commands:
 ```
-$ make prepare
+$ make docker-build
 $ make start
 ```
+
+Go to `http://localhost:8000`.
 
 ## TODOs
 
