@@ -14,15 +14,12 @@ docker-build-envoy:
 docker-build-cmd:
 	docker build -t se7entyse7en/npm-pdr -f docker/cmd/Dockerfile .
 
+.PHONY: docker-build-app
+docker-build-app:
+	docker build -t se7entyse7en/npm-pdr-app -f docker/app/Dockerfile .
+
 .PHONY: docker-build
-docker-build: docker-build-envoy docker-build-cmd
-
-.PHONY: install-web
-install-web:
-	cd app && npm install
-
-.PHONY: prepare
-prepare: docker-build install-web
+docker-build: docker-build-envoy docker-build-cmd docker-build-app
 
 .PHONY: start
 start:
@@ -30,7 +27,7 @@ start:
 	@sleep 10
 	docker-compose up -d --scale=worker=8 api worker dispatcher
 	@sleep 5
-	cd app && npm start
+	docker-compose up -d app
 
 .PHONY: stop
 stop:
