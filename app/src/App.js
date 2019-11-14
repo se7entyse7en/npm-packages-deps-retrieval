@@ -16,15 +16,20 @@ class App extends React.Component {
   }
 
   render = () => {
-    let graph = null;
-    if (this.state.response.err === null && this.state.response.dependencies !== null) {
-      graph = <GraphViz dependencies={this.state.response.dependencies}></GraphViz>;
+    let result = null;
+    if (this.state.response.err === null) {
+        if (this.state.response.dependencies !== null) {
+          result = <GraphViz dependencies={this.state.response.dependencies}></GraphViz>;
+        }
+      result = <div></div>;
+    } else {
+      result = <div>{this.state.response.err.message}</div>;
     }
 
     return (
       <div className="App container">
         <Form onResponseHandler={this.onResponseHandler}></Form>
-        {graph}
+        {result}
       </div>
     );
   };
