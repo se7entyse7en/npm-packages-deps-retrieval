@@ -13,7 +13,8 @@ message DependenciesRequest {
 message Dependency {
     string name = 1;
     string version = 2;
-    repeated Dependency dependencies = 3;
+    bool unresolved = 3;
+    repeated Dependency dependencies = 4;
 }
 
 message DependenciesResponse {
