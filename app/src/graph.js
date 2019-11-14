@@ -64,13 +64,15 @@ class GraphViz extends React.Component {
     const name = deps.getName();
     const version = deps.getVersion();
     const children = deps.getDependenciesList();
+    const unresolved = deps.getUnresolved();
 
-    const packageNodeId = this.addPackage(name, version, graph, packages, level);
+    const packageNodeId = this.addPackage(name, version, unresolved, graph, packages, level);
 
     for (let child of children) {
       const childName = child.getName();
       const childVersion = child.getVersion();
-      const childPackageNodeId = this.addPackage(childName, childVersion, graph, packages, level + 1);
+      const childUnresolved = child.getUnresolved();
+      const childPackageNodeId = this.addPackage(childName, childVersion, childUnresolved, graph, packages, level + 1);
 
       graph.edges.push({from: packageNodeId, to: childPackageNodeId});
 
@@ -78,15 +80,21 @@ class GraphViz extends React.Component {
     }
   };
 
-  addPackage = (name, version, graph, packages, level) => {
+  addPackage = (name, version, unresolved, graph, packages, level) => {
     const key = name + "@" + version;
     if (!(key in packages)) {
       packages[key] = graph.nodes.length;
-      graph.nodes.push({
+      const n = {
         id: packages[key],
         label: key,
         level: level
-      });
+      };
+
+      if (unresolved) {
+        n["color"] = "#ffff00";
+      }
+
+      graph.nodes.push(n);
     }
 
     graph.nodes[packages[key]]["level"] = Math.max(
