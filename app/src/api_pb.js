@@ -244,7 +244,7 @@ proto.api.DependenciesRequest.prototype.setVersion = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.api.Dependency.repeatedFields_ = [3];
+proto.api.Dependency.repeatedFields_ = [4];
 
 
 
@@ -279,6 +279,7 @@ proto.api.Dependency.toObject = function(includeInstance, msg) {
   var f, obj = {
     name: jspb.Message.getFieldWithDefault(msg, 1, ""),
     version: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    unresolved: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
     dependenciesList: jspb.Message.toObjectList(msg.getDependenciesList(),
     proto.api.Dependency.toObject, includeInstance)
   };
@@ -326,6 +327,10 @@ proto.api.Dependency.deserializeBinaryFromReader = function(msg, reader) {
       msg.setVersion(value);
       break;
     case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setUnresolved(value);
+      break;
+    case 4:
       var value = new proto.api.Dependency;
       reader.readMessage(value,proto.api.Dependency.deserializeBinaryFromReader);
       msg.addDependencies(value);
@@ -373,10 +378,17 @@ proto.api.Dependency.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getUnresolved();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
   f = message.getDependenciesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      3,
+      4,
       f,
       proto.api.Dependency.serializeBinaryToWriter
     );
@@ -421,12 +433,30 @@ proto.api.Dependency.prototype.setVersion = function(value) {
 
 
 /**
- * repeated Dependency dependencies = 3;
+ * optional bool unresolved = 3;
+ * @return {boolean}
+ */
+proto.api.Dependency.prototype.getUnresolved = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.api.Dependency} returns this
+ */
+proto.api.Dependency.prototype.setUnresolved = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * repeated Dependency dependencies = 4;
  * @return {!Array<!proto.api.Dependency>}
  */
 proto.api.Dependency.prototype.getDependenciesList = function() {
   return /** @type{!Array<!proto.api.Dependency>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.api.Dependency, 3));
+    jspb.Message.getRepeatedWrapperField(this, proto.api.Dependency, 4));
 };
 
 
@@ -435,7 +465,7 @@ proto.api.Dependency.prototype.getDependenciesList = function() {
  * @return {!proto.api.Dependency} returns this
 */
 proto.api.Dependency.prototype.setDependenciesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 3, value);
+  return jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
@@ -445,7 +475,7 @@ proto.api.Dependency.prototype.setDependenciesList = function(value) {
  * @return {!proto.api.Dependency}
  */
 proto.api.Dependency.prototype.addDependencies = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.api.Dependency, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.api.Dependency, opt_index);
 };
 
 

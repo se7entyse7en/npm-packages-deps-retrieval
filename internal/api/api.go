@@ -34,10 +34,19 @@ func (s *ApiServer) parsePackage(r *DependenciesRequest) (string, string) {
 	return r.GetName(), version
 }
 
+func (s *ApiServer) buildUnresolvedDependency(packageName, packageVersion string) *Dependency {
+	return &Dependency{
+		Name:         packageName,
+		Version:      packageVersion,
+		Unresolved:   true,
+		Dependencies: make([]*Dependency, 0),
+	}
+}
+
 func (s *ApiServer) buildDependenciesTree(ctx context.Context, packageName, packageVersion string) (*Dependency, error) {
 	deps, err := s.getDependencies(ctx, packageName, packageVersion)
 	if err != nil {
-		return nil, err
+		return s.buildUnresolvedDependency(packageName, packageVersion), nil
 	}
 
 	var wg sync.WaitGroup
@@ -71,6 +80,7 @@ func (s *ApiServer) buildDependenciesTree(ctx context.Context, packageName, pack
 		return &Dependency{
 			Name:         packageName,
 			Version:      packageVersion,
+			Unresolved:   false,
 			Dependencies: depsTree,
 		}, nil
 	}

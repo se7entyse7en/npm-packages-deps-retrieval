@@ -20,8 +20,9 @@ class App extends React.Component {
     if (this.state.response.err === null) {
         if (this.state.response.dependencies !== null) {
           result = <GraphViz dependencies={this.state.response.dependencies}></GraphViz>;
+        } else {
+          result = <div></div>;
         }
-      result = <div></div>;
     } else {
       result = <div>{this.state.response.err.message}</div>;
     }
