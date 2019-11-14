@@ -43,7 +43,7 @@ func (s *ApiServer) buildDependenciesTree(ctx context.Context, packageName, pack
 	var wg sync.WaitGroup
 	index := 0
 	depsTree := make([]*Dependency, len(deps))
-	errCh := make(chan error)
+	errCh := make(chan error, len(deps))
 	for name, version := range deps {
 		wg.Add(1)
 
