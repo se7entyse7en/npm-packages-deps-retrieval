@@ -21,6 +21,21 @@ docker-build-app:
 .PHONY: docker-build
 docker-build: docker-build-envoy docker-build-cmd docker-build-app
 
+.PHONY: docker-push-envoy
+docker-push-envoy:
+	docker push se7entyse7en/npm-pdr-envoy
+
+.PHONY: docker-push-cmd
+docker-push-cmd:
+	docker push se7entyse7en/npm-pdr-cmd
+
+.PHONY: docker-push-app
+docker-push-app:
+	docker push se7entyse7en/npm-pdr-app
+
+.PHONY: docker-push
+docker-push: docker-push-envoy docker-push-cmd docker-push-app
+
 .PHONY: start
 start:
 	docker-compose up -d mongodb rabbitmq envoy
