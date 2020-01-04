@@ -39,6 +39,8 @@ var dispatcherCmd = &cobra.Command{
 		if err := d.Start(ctx); err != nil {
 			panic(err)
 		}
+
+		fmt.Println("dispatcher finished")
 	},
 }
 
