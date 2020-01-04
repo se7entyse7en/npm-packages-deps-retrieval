@@ -8,11 +8,11 @@ proto-gen:
 
 .PHONY: docker-build-envoy
 docker-build-envoy:
-	docker build -t grpcweb/envoy -f docker/envoy/Dockerfile .
+	docker build -t se7entyse7en/npm-pdr-envoy -f docker/envoy/Dockerfile .
 
 .PHONY: docker-build-cmd
 docker-build-cmd:
-	docker build -t se7entyse7en/npm-pdr -f docker/cmd/Dockerfile .
+	docker build -t se7entyse7en/npm-pdr-cmd -f docker/cmd/Dockerfile .
 
 .PHONY: docker-build-app
 docker-build-app:
@@ -20,6 +20,21 @@ docker-build-app:
 
 .PHONY: docker-build
 docker-build: docker-build-envoy docker-build-cmd docker-build-app
+
+.PHONY: docker-push-envoy
+docker-push-envoy:
+	docker push se7entyse7en/npm-pdr-envoy
+
+.PHONY: docker-push-cmd
+docker-push-cmd:
+	docker push se7entyse7en/npm-pdr-cmd
+
+.PHONY: docker-push-app
+docker-push-app:
+	docker push se7entyse7en/npm-pdr-app
+
+.PHONY: docker-push
+docker-push: docker-push-envoy docker-push-cmd docker-push-app
 
 .PHONY: start
 start:

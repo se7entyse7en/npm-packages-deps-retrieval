@@ -107,15 +107,18 @@ func (w *Worker) Start(ctx context.Context) error {
 		packageName, packageVersion := splitted[0], splitted[1]
 		deps, err := w.f.Fetch(packageName, packageVersion)
 		if err != nil {
-			return err
+			fmt.Printf("error when fetching `%s`: %v\n", id, err)
+			continue
 		}
 
 		if err := w.f.Store(ctx, id, packageName, packageVersion, deps); err != nil {
-			return err
+			fmt.Printf("error when storing `%s`: %v\n", id, err)
+			continue
 		}
 
 		if err := w.enqueueDependencies(ctx, deps); err != nil {
-			return err
+			fmt.Printf("error when enqueueing deps `%v`: %v\n", deps, err)
+			continue
 		}
 	}
 

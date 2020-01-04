@@ -3,13 +3,13 @@ version: '3.4'
 services:
 
   dispatcher:
-    image: se7entyse7en/npm-pdr
+    image: se7entyse7en/npm-pdr-cmd
     depends_on:
       - worker
     command: ['dispatcher', '-b', 'amqp://rabbitmq:5672', '-q', 'events', '-t', '100']
 
   worker:
-    image: se7entyse7en/npm-pdr
+    image: se7entyse7en/npm-pdr-cmd
     restart: unless-stopped
     depends_on:
       - rabbitmq
@@ -17,7 +17,7 @@ services:
     command: ['worker', '-b', 'amqp://rabbitmq:5672', '-q', 'events', '-u', 'mongodb://mongodb:27017', '-d', 'packages', '-c', 'dependencies']
 
   api:
-    image: se7entyse7en/npm-pdr
+    image: se7entyse7en/npm-pdr-cmd
     restart: unless-stopped
     ports:
       - 8080:8080
@@ -35,7 +35,7 @@ services:
       - api
 
   envoy:
-    image: grpcweb/envoy
+    image: se7entyse7en/npm-pdr-envoy
     restart: unless-stopped
     ports:
       - 9090:9090
