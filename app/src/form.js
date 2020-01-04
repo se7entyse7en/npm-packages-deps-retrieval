@@ -3,7 +3,7 @@ import React from 'react';
 const {DependenciesRequest} = require('./api_pb.js');
 const {DependenciesServiceClient} = require('./api_grpc_web_pb.js');
 
-const api = new DependenciesServiceClient('http://localhost:9090');
+const api = new DependenciesServiceClient(window.ENV.API_URL);
 
 class Form extends React.Component {
 
